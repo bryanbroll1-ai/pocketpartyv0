@@ -1,0 +1,21 @@
+public enum PartyArtMaterialType
+{
+    Grass,
+    Dirt,
+    Wood,
+    Stone,
+    Platform,
+    KitchenCounter,
+    Water,
+    Lava,
+    UIPanel,
+    PlayerBlue,
+    PlayerRed,
+    PlayerGreen,
+    PlayerYellow,
+    Skin,
+    DarkAccent,
+    WhiteAccent,
+    Metal,
+    Sky
+}

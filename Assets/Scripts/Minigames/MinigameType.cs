@@ -1,0 +1,21 @@
+public enum MinigameType
+{
+    FrameworkDummy,
+    TimeStop,
+    ColorRush,
+    HoldRelease,
+    SwipeDash,
+    TapTargets,
+    MemoryTiles,
+    VineClimb,
+    PlankRaft,
+    ParasolDrop,
+    CastlePose,
+    PhotoMatch,
+    StackLights,
+    SheepDodge,
+    MinecartSwitch,
+    CookingChop,
+    LuckyRollShowdown,
+    TowerTapClimb
+}
