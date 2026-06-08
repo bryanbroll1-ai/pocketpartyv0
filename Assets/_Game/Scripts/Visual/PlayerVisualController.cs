@@ -13,6 +13,10 @@ public class PlayerVisualController : MonoBehaviour
     private Transform rightArm;
     private Transform leftFoot;
     private Transform rightFoot;
+    private Transform groundShadow;
+    private GameObject modelInstance;
+    private bool usingModel;
+    private Vector3 modelBaseScale = Vector3.one;
     private Vector3 startPosition;
     private bool built;
 
@@ -56,6 +60,21 @@ public class PlayerVisualController : MonoBehaviour
         float bob = Mathf.Sin(time * GetMoodSpeed()) * GetMoodAmplitude();
         transform.localPosition = startPosition + Vector3.up * bob;
 
+        if (usingModel)
+        {
+            if (modelInstance != null)
+            {
+                float squashModel = mood == PlayerAvatarMood.Jump ? 1f + Mathf.Abs(Mathf.Sin(time * 6f)) * 0.08f : 1f;
+                modelInstance.transform.localScale = new Vector3(
+                    modelBaseScale.x / squashModel,
+                    modelBaseScale.y * squashModel,
+                    modelBaseScale.z / squashModel);
+            }
+
+            UpdateGroundShadow();
+            return;
+        }
+
         float armSwing = Mathf.Sin(time * GetMoodSpeed() * 1.25f) * GetArmSwing();
         leftArm.localRotation = Quaternion.Euler(0f, 0f, 18f + armSwing);
         rightArm.localRotation = Quaternion.Euler(0f, 0f, -18f - armSwing);
@@ -65,6 +84,22 @@ public class PlayerVisualController : MonoBehaviour
         float squash = mood == PlayerAvatarMood.Jump ? 1f + Mathf.Abs(Mathf.Sin(time * 6f)) * 0.08f : 1f;
         body.localScale = new Vector3(0.42f / squash, 0.54f * squash, 0.36f / squash);
         head.localScale = Vector3.one * (0.54f + bob * 0.035f);
+
+        UpdateGroundShadow();
+    }
+
+    // Keeps the shadow pinned to the ground and shrinks it as the piece lifts.
+    private void UpdateGroundShadow()
+    {
+        if (groundShadow == null)
+        {
+            return;
+        }
+
+        float lift = transform.localPosition.y - startPosition.y;
+        groundShadow.localPosition = new Vector3(0f, 0.02f - lift, 0f);
+        float s = Mathf.Clamp(0.92f - lift * 1.1f, 0.5f, 1.1f);
+        groundShadow.localScale = new Vector3(s, s, 1f);
     }
 
     private void BuildIfNeeded()
@@ -75,6 +110,19 @@ public class PlayerVisualController : MonoBehaviour
         }
 
         ClearChildren();
+
+        // Prefer a real model (e.g. a Meshy3D GLB) if one is provided.
+        modelInstance = ModelLibrary.TryInstantiate($"Character_{playerIndex}", transform, "Character");
+        if (modelInstance != null)
+        {
+            usingModel = true;
+            modelBaseScale = modelInstance.transform.localScale;
+            ModelLibrary.ApplyTint(modelInstance, bodyColor);
+            groundShadow = RuntimeVisuals.AttachGroundShadow(transform, 0.46f, 0.02f);
+            built = true;
+            return;
+        }
+
         body = CreatePrimitive("Rounded Body", PrimitiveType.Capsule, new Vector3(0f, 0.68f, 0f), new Vector3(0.42f, 0.54f, 0.36f), PartyArtMaterials.CreateTinted("Avatar Body", bodyColor)).transform;
         head = CreatePrimitive("Big Friendly Head", PrimitiveType.Sphere, new Vector3(0f, 1.25f, 0f), Vector3.one * 0.54f, PartyArtMaterials.Get(PartyArtMaterialType.Skin)).transform;
         leftArm = CreatePrimitive("Left Arm", PrimitiveType.Capsule, new Vector3(-0.38f, 0.78f, 0f), new Vector3(0.13f, 0.32f, 0.13f), PartyArtMaterials.CreateTinted("Avatar Arm", bodyColor * 0.92f)).transform;
@@ -86,7 +134,7 @@ public class PlayerVisualController : MonoBehaviour
         CreatePrimitive("Face Left Eye", PrimitiveType.Sphere, new Vector3(-0.13f, 1.31f, -0.46f), Vector3.one * 0.055f, PartyArtMaterials.Get(PartyArtMaterialType.DarkAccent));
         CreatePrimitive("Face Right Eye", PrimitiveType.Sphere, new Vector3(0.13f, 1.31f, -0.46f), Vector3.one * 0.055f, PartyArtMaterials.Get(PartyArtMaterialType.DarkAccent));
         CreatePrimitive("Soft Smile", PrimitiveType.Cube, new Vector3(0f, 1.18f, -0.47f), new Vector3(0.20f, 0.026f, 0.026f), PartyArtMaterials.Get(PartyArtMaterialType.DarkAccent));
-        CreatePrimitive("Ground Contact Pad", PrimitiveType.Cylinder, new Vector3(0f, 0.025f, 0f), new Vector3(0.58f, 0.018f, 0.42f), PartyArtMaterials.CreateTinted("Avatar Contact Pad", new Color(0.58f, 0.66f, 0.70f, 1f)));
+        groundShadow = RuntimeVisuals.AttachGroundShadow(transform, 0.46f, 0.02f);
 
         built = true;
         ApplyMaterials();
@@ -112,6 +160,12 @@ public class PlayerVisualController : MonoBehaviour
 
     private void ApplyMaterials()
     {
+        if (usingModel)
+        {
+            ModelLibrary.ApplyTint(modelInstance, bodyColor);
+            return;
+        }
+
         if (body == null)
         {
             return;

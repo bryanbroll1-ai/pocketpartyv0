@@ -9,10 +9,10 @@ public class GameManager : MonoBehaviour
     private readonly string[] playerNames = { "Bloop", "Nomi", "Taro", "Pippa" };
     private readonly Color[] playerColors =
     {
-        new Color(0.24f, 0.63f, 0.95f),
-        new Color(0.96f, 0.45f, 0.62f),
-        new Color(0.34f, 0.78f, 0.48f),
-        new Color(0.98f, 0.75f, 0.28f)
+        PartyArtPalette.PlayerBlue,
+        PartyArtPalette.PlayerRed,
+        PartyArtPalette.PlayerGreen,
+        PartyArtPalette.PlayerYellow
     };
 
     private PerformanceSettings performanceSettings;
@@ -183,6 +183,12 @@ public class GameManager : MonoBehaviour
 
         waitingForRoll = false;
         audioManager.PlayButton();
+        uiManager.PulseDiceButton();
+        if (cameraFollow != null)
+        {
+            cameraFollow.AddShake(0.08f);
+        }
+
         int roll = diceRoller.Roll();
         PlayerController currentPlayer = turnManager.CurrentPlayer;
         turnStatus = $"{currentPlayer.PlayerName} rolled {roll}.";
@@ -217,6 +223,31 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private Vector3 MarkerPos(PlayerController player)
+    {
+        Transform marker = boardManager.GetMarkerTransform(player);
+        return marker != null ? marker.position : Vector3.zero;
+    }
+
+    private void CelebrateCoins(PlayerController player, int amount)
+    {
+        Transform marker = boardManager.GetMarkerTransform(player);
+        if (amount >= 0)
+        {
+            PartyFx.CoinBurst(MarkerPos(player), amount);
+            PartyJuice.PopScale(marker, 0.32f);
+        }
+        else
+        {
+            PartyFx.Poof(MarkerPos(player), PartyArtPalette.PlayerRed);
+        }
+
+        if (cameraFollow != null)
+        {
+            cameraFollow.AddShake(0.12f);
+        }
+    }
+
     private bool ApplyTileEffect(PlayerController player, BoardTile tile)
     {
         if (tile == null)
@@ -229,18 +260,22 @@ public class GameManager : MonoBehaviour
             case BoardTileType.CoinPlus:
                 coinManager.AddCoins(player, 3);
                 audioManager.PlayCoin();
+                CelebrateCoins(player, 3);
                 turnStatus = $"{player.PlayerName} gained 3 coins.";
                 return false;
             case BoardTileType.CoinMinus:
                 coinManager.AddCoins(player, -2);
+                CelebrateCoins(player, -2);
                 turnStatus = $"{player.PlayerName} lost 2 coins.";
                 return false;
             case BoardTileType.Event:
                 int swing = Random.value > 0.5f ? 5 : -3;
                 coinManager.AddCoins(player, swing);
+                CelebrateCoins(player, swing);
                 turnStatus = swing > 0 ? $"{player.PlayerName} found {swing} coins." : $"{player.PlayerName} hit a coin tax.";
                 return false;
             case BoardTileType.Minigame:
+                PartyFx.Sparkle(MarkerPos(player), PartyArtPalette.PlayerBlue);
                 turnStatus = "Minigame tile!";
                 return true;
             default:
@@ -259,6 +294,16 @@ public class GameManager : MonoBehaviour
     {
         coinManager.AwardPlacementCoins(result);
         result.DisplayLines.Insert(0, "Awards: 10 / 6 / 3 / 1 coins");
+        if (result.Placements != null && result.Placements.Count > 0)
+        {
+            PartyFx.Confetti(MarkerPos(result.Placements[0]));
+        }
+
+        if (cameraFollow != null)
+        {
+            cameraFollow.AddShake(0.2f);
+        }
+
         uiManager.ShowMinigameResults(result, () =>
         {
             uiManager.ShowBoardHud(RollDice);
@@ -275,6 +320,17 @@ public class GameManager : MonoBehaviour
     private void ShowFinalResults()
     {
         var rankedPlayers = players.OrderByDescending(player => player.Coins).ToList();
+        if (rankedPlayers.Count > 0)
+        {
+            PartyFx.Confetti(MarkerPos(rankedPlayers[0]));
+            PartyFx.Confetti(new Vector3(0f, 2.0f, 0f));
+        }
+
+        if (cameraFollow != null)
+        {
+            cameraFollow.AddShake(0.25f);
+        }
+
         resultsPanel.Show(uiManager, rankedPlayers, ShowMainMenu);
     }
 

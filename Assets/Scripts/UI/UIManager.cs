@@ -8,10 +8,10 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     private static readonly Color ScreenInk = new Color(0.045f, 0.055f, 0.070f, 1f);
-    private static readonly Color PanelInk = new Color(0.070f, 0.086f, 0.110f, 0.88f);
-    private static readonly Color PanelStroke = new Color(1f, 1f, 1f, 0.16f);
-    private static readonly Color ButtonInk = new Color(0.11f, 0.17f, 0.22f, 0.96f);
-    private static readonly Color ButtonAccent = new Color(0.20f, 0.67f, 0.86f, 1f);
+    private static readonly Color PanelInk = new Color(0.085f, 0.10f, 0.13f, 0.90f);
+    private static readonly Color PanelStroke = new Color(1f, 1f, 1f, 0.18f);
+    private static readonly Color ButtonInk = new Color(0.13f, 0.20f, 0.27f, 0.98f);
+    private static readonly Color ButtonAccent = new Color(1.00f, 0.70f, 0.22f, 1f);
 
     public Canvas Canvas { get; private set; }
 
@@ -260,6 +260,14 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    public void PulseDiceButton()
+    {
+        if (diceButton != null)
+        {
+            PartyJuice.PopScale(diceButton.transform, 0.18f, 0.28f);
+        }
+    }
+
     public RectTransform CreateRow(RectTransform parent)
     {
         var row = new GameObject("Row", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(LayoutElement));
@@ -290,6 +298,8 @@ public class UIManager : MonoBehaviour
 
         var image = panelObject.GetComponent<Image>();
         image.color = color.a > 0f ? color : PanelInk;
+        image.sprite = RuntimeVisuals.GetRoundedRectSprite();
+        image.type = Image.Type.Sliced;
 
         var outline = panelObject.GetComponent<Outline>();
         outline.effectColor = PanelStroke;
@@ -350,6 +360,8 @@ public class UIManager : MonoBehaviour
         buttonObject.transform.SetParent(parent, false);
         var image = buttonObject.GetComponent<Image>();
         image.color = ButtonInk;
+        image.sprite = RuntimeVisuals.GetRoundedRectSprite();
+        image.type = Image.Type.Sliced;
 
         var element = buttonObject.GetComponent<LayoutElement>();
         element.preferredHeight = 112;
@@ -378,17 +390,21 @@ public class UIManager : MonoBehaviour
         accentRect.anchorMin = new Vector2(0f, 0f);
         accentRect.anchorMax = new Vector2(0f, 1f);
         accentRect.pivot = new Vector2(0f, 0.5f);
-        accentRect.sizeDelta = new Vector2(9f, 0f);
-        accentRect.anchoredPosition = Vector2.zero;
-        accentObject.GetComponent<Image>().color = ButtonAccent;
+        accentRect.sizeDelta = new Vector2(12f, -34f);
+        accentRect.anchoredPosition = new Vector2(14f, 0f);
+        var accentImage = accentObject.GetComponent<Image>();
+        accentImage.color = ButtonAccent;
+        accentImage.sprite = RuntimeVisuals.GetRoundedRectSprite();
+        accentImage.type = Image.Type.Sliced;
+        accentImage.raycastTarget = false;
 
         var textObject = new GameObject("Text", typeof(RectTransform), typeof(Text));
         textObject.transform.SetParent(buttonObject.transform, false);
         var textRect = textObject.GetComponent<RectTransform>();
         textRect.anchorMin = Vector2.zero;
         textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = new Vector2(16, 8);
-        textRect.offsetMax = new Vector2(-16, -8);
+        textRect.offsetMin = new Vector2(40, 8);
+        textRect.offsetMax = new Vector2(-24, -8);
 
         var text = textObject.GetComponent<Text>();
         text.font = defaultFont;
