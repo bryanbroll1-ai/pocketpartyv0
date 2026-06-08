@@ -15,3 +15,15 @@
 *.mdb
 *.opendb
 *.VC.db
+
+# --- Added during cleanup: prevent vendored editor packages / binaries ---
+# These caused the project to balloon to ~330 MB. Registry packages belong
+# in the cache (Library/), not committed into Packages/.
+/Packages/com.unity.ai.assistant/
+/Packages/*/RelayApp~/
+/Packages/*/ThirdParty~/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini

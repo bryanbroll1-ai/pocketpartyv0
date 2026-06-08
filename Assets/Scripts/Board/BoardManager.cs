@@ -59,6 +59,13 @@ public class BoardManager : MonoBehaviour
             yield return AnimateMarker(player, start, end);
             SetPlayerTile(player, nextIndex);
         }
+
+        Transform marker = GetMarkerTransform(player);
+        if (marker != null)
+        {
+            PartyJuice.PopScale(marker, 0.22f);
+            PartyFx.Poof(marker.position, player.PlayerColor);
+        }
     }
 
     public BoardTile GetTileForPlayer(PlayerController player)
@@ -162,21 +169,37 @@ public class BoardManager : MonoBehaviour
         var marker = new GameObject($"{player.PlayerName} Marker");
         marker.transform.SetParent(markerRoot);
 
+        // Visuals live in a child that can hop independently, so the shadow
+        // (parented to the root) stays pinned to the ground.
+        var visual = new GameObject("Visual");
+        visual.transform.SetParent(marker.transform, false);
+
+        // Prefer a real character model (e.g. Meshy3D GLB) if provided.
+        GameObject model = ModelLibrary.TryInstantiate($"Character_{player.PlayerIndex}", visual.transform, "Character");
+        if (model != null)
+        {
+            ModelLibrary.ApplyTint(model, player.PlayerColor);
+            RuntimeVisuals.AttachGroundShadow(marker.transform, 0.3f, 0.09f);
+            return marker;
+        }
+
         var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         body.name = "Player Body";
-        body.transform.SetParent(marker.transform, false);
+        body.transform.SetParent(visual.transform, false);
         body.transform.localPosition = new Vector3(0f, 0.55f, 0f);
         body.transform.localScale = new Vector3(0.34f, 0.42f, 0.34f);
-        body.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterial($"{player.PlayerName} Body", player.PlayerColor);
+        body.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterialAdvanced($"{player.PlayerName} Body", player.PlayerColor, 0.35f, 0f, player.PlayerColor * 0.18f);
         RemoveCollider(body);
 
         var face = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         face.name = "Player Face Dot";
-        face.transform.SetParent(marker.transform, false);
+        face.transform.SetParent(visual.transform, false);
         face.transform.localPosition = new Vector3(0f, 0.72f, -0.19f);
         face.transform.localScale = Vector3.one * 0.08f;
         face.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterial($"{player.PlayerName} Face", Color.white);
         RemoveCollider(face);
+
+        RuntimeVisuals.AttachGroundShadow(marker.transform, 0.3f, 0.09f);
         return marker;
     }
 
@@ -221,6 +244,7 @@ public class BoardManager : MonoBehaviour
             yield break;
         }
 
+        Transform visual = marker.transform.Find("Visual");
         const float duration = 0.22f;
         float elapsed = 0f;
         while (elapsed < duration)
@@ -228,13 +252,20 @@ public class BoardManager : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / duration);
             float eased = Mathf.SmoothStep(0f, 1f, t);
-            Vector3 position = Vector3.Lerp(start, end, eased);
-            position.y += Mathf.Sin(t * Mathf.PI) * 0.32f;
-            marker.transform.position = position;
+            marker.transform.position = Vector3.Lerp(start, end, eased);
+            if (visual != null)
+            {
+                visual.localPosition = new Vector3(0f, Mathf.Sin(t * Mathf.PI) * 0.32f, 0f);
+            }
+
             yield return null;
         }
 
         marker.transform.position = end;
+        if (visual != null)
+        {
+            visual.localPosition = Vector3.zero;
+        }
     }
 
     private void CreateActiveRing()
@@ -242,8 +273,11 @@ public class BoardManager : MonoBehaviour
         activeRing = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         activeRing.name = "Current Turn Glow";
         activeRing.transform.localScale = new Vector3(0.64f, 0.025f, 0.64f);
-        activeRing.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterial("Current Turn Glow", new Color(1f, 0.95f, 0.42f, 1f));
+        Color ringColor = new Color(1f, 0.92f, 0.40f, 1f);
+        activeRing.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterialAdvanced("Current Turn Glow", ringColor, 0.6f, 0f, ringColor * 0.8f);
         RemoveCollider(activeRing);
+        activeRing.AddComponent<PulseEmissive>().Configure(3.0f, 0.8f, 0.10f);
+        activeRing.AddComponent<BobMotion>().Configure(0f, 1f, 60f);
         activeRing.SetActive(false);
     }
 

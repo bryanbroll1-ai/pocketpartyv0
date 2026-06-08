@@ -1,0 +1,25 @@
+MODELLE HIER ABLEGEN
+====================
+
+Lege hier deine Meshy3D-Modelle (oder andere Modelle) ab, damit sie die
+prozeduralen Figuren/Objekte automatisch ersetzen.
+
+Der Dateiname (ohne Endung) MUSS exakt einer dieser Schlüssel sein:
+
+Charaktere (Spielfiguren auf dem Brett UND in Minispielen):
+  Character_0      -> Spieler 1 (Bloop)
+  Character_1      -> Spieler 2 (Nomi)
+  Character_2      -> Spieler 3 (Taro)
+  Character_3      -> Spieler 4 (Pippa)
+  Character        -> Fallback fuer ALLE Spieler (falls kein Character_0..3 da ist)
+
+Objekte / Deko:
+  Prop_Tree        -> Baum
+  Prop_Rock        -> Fels / Stein
+  Prop_Crystal     -> Kristall
+  Prop_Flag        -> Flagge
+  Prop_Lantern     -> Laterne (4 Ecken)
+
+Fehlt ein Modell, nutzt das Spiel automatisch die generierte Platzhalter-Optik.
+
+Vollstaendige Anleitung: TUTORIAL_Modelle_ersetzen.md (im Projekt-Hauptordner).

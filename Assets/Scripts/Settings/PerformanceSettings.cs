@@ -36,7 +36,15 @@ public class PerformanceSettings : MonoBehaviour
     {
         Application.targetFrameRate = TargetFrameRate;
         QualitySettings.vSyncCount = 0;
-        QualitySettings.shadows = ShadowQuality.Disable;
+
+        // Real shadows are the single biggest depth cue and this scene has very
+        // few objects, so we keep them on but cheap (hard, single map, short
+        // distance). Soft grounding blobs handle everything beyond the range.
+        QualitySettings.shadows = ShadowQuality.HardOnly;
+        QualitySettings.shadowResolution = BatterySaver ? ShadowResolution.Low : ShadowResolution.Medium;
+        QualitySettings.shadowDistance = 32f;
+        QualitySettings.shadowCascades = 0;
+
         QualitySettings.softParticles = false;
         QualitySettings.realtimeReflectionProbes = false;
         Screen.sleepTimeout = SleepTimeout.NeverSleep;

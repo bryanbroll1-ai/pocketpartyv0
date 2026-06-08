@@ -98,6 +98,7 @@ public class BoardWorldDecorator
             water.transform.localScale = new Vector3(RandomRange(0.8f, 1.8f), 0.025f, RandomRange(0.42f, 1.18f));
             water.transform.rotation = Quaternion.Euler(0f, RandomRange(-18f, 18f), 0f);
             water.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterial("Water Patch", new Color(0.18f, 0.52f, 0.66f, 1f));
+            water.AddComponent<BobMotion>().Configure(0.02f, 1.1f, 0f);
             RemoveCollider(water);
         }
     }
@@ -162,6 +163,11 @@ public class BoardWorldDecorator
 
     private void CreateTree(Vector3 position)
     {
+        if (TryPropModel("Prop_Tree", position, 0.34f))
+        {
+            return;
+        }
+
         var trunk = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         trunk.name = "Tiny Tree Trunk";
         trunk.transform.SetParent(root);
@@ -175,12 +181,19 @@ public class BoardWorldDecorator
         top.transform.SetParent(root);
         top.transform.position = position + new Vector3(0f, 0.62f, 0f);
         top.transform.localScale = Vector3.one * RandomRange(0.34f, 0.48f);
-        top.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterial("Tree Top", new Color(0.15f, 0.48f, 0.31f));
+        top.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterial("Tree Top", PartyArtPalette.GrassDeep);
         RemoveCollider(top);
+
+        AddShadow(position, 0.34f);
     }
 
     private void CreateRock(Vector3 position)
     {
+        if (TryPropModel("Prop_Rock", position, 0.26f))
+        {
+            return;
+        }
+
         var rock = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         rock.name = "Smooth Pebble";
         rock.transform.SetParent(root);
@@ -189,22 +202,37 @@ public class BoardWorldDecorator
         rock.transform.rotation = Quaternion.Euler(0f, RandomRange(0f, 180f), 0f);
         rock.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterial("Pebble", new Color(0.50f, 0.56f, 0.58f));
         RemoveCollider(rock);
+        AddShadow(position, 0.26f);
     }
 
     private void CreateCrystal(Vector3 position)
     {
+        if (TryPropModel("Prop_Crystal", position, 0.2f, 40f))
+        {
+            return;
+        }
+
         var crystal = GameObject.CreatePrimitive(PrimitiveType.Cube);
         crystal.name = "Little Crystal";
         crystal.transform.SetParent(root);
         crystal.transform.position = position + new Vector3(0f, 0.22f, 0f);
         crystal.transform.localScale = new Vector3(0.22f, RandomRange(0.36f, 0.62f), 0.22f);
         crystal.transform.rotation = Quaternion.Euler(RandomRange(0f, 8f), RandomRange(0f, 180f), RandomRange(0f, 8f));
-        crystal.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterial("Crystal", new Color(0.40f, 0.82f, 0.88f));
+        Color crystalColor = new Color(0.40f, 0.82f, 0.88f);
+        crystal.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterialAdvanced("Crystal", crystalColor, 0.7f, 0.1f, crystalColor * 0.5f);
+        crystal.AddComponent<BobMotion>().Configure(0.03f, 1.4f, 40f);
+        crystal.AddComponent<PulseEmissive>().Configure(2.0f, 0.6f, 0f);
         RemoveCollider(crystal);
+        AddShadow(position, 0.2f);
     }
 
     private void CreateFlag(Vector3 position)
     {
+        if (TryPropModel("Prop_Flag", position, 0.16f))
+        {
+            return;
+        }
+
         var pole = GameObject.CreatePrimitive(PrimitiveType.Cube);
         pole.name = "Map Flag Pole";
         pole.transform.SetParent(root);
@@ -220,6 +248,34 @@ public class BoardWorldDecorator
         flag.transform.localScale = new Vector3(0.34f, 0.20f, 0.035f);
         flag.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterial("Flag Cloth", new Color(0.96f, 0.48f, 0.30f));
         RemoveCollider(flag);
+        AddShadow(position, 0.16f);
+    }
+
+    private void AddShadow(Vector3 position, float radius)
+    {
+        Transform shadow = RuntimeVisuals.AttachGroundShadow(root, radius, 0f);
+        shadow.position = new Vector3(position.x, 0.035f, position.z);
+    }
+
+    // If a model exists for this prop key, place it and return true. Callers
+    // then skip the procedural primitive version.
+    private bool TryPropModel(string key, Vector3 position, float shadowRadius, float spin = 0f)
+    {
+        GameObject model = ModelLibrary.TryInstantiate(key, root);
+        if (model == null)
+        {
+            return false;
+        }
+
+        model.transform.position = position;
+        model.transform.rotation = Quaternion.Euler(0f, RandomRange(0f, 360f), 0f);
+        if (spin != 0f)
+        {
+            model.AddComponent<BobMotion>().Configure(0.03f, 1.4f, spin);
+        }
+
+        AddShadow(position, shadowRadius);
+        return true;
     }
 
     private void CreateCornerLanterns()
@@ -234,6 +290,11 @@ public class BoardWorldDecorator
 
         foreach (Vector3 position in positions)
         {
+            if (TryPropModel("Prop_Lantern", position, 0.18f))
+            {
+                continue;
+            }
+
             var baseObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             baseObject.name = "Corner Lantern Base";
             baseObject.transform.SetParent(root);
@@ -247,7 +308,9 @@ public class BoardWorldDecorator
             glowObject.transform.SetParent(root);
             glowObject.transform.position = position + new Vector3(0f, 0.52f, 0f);
             glowObject.transform.localScale = Vector3.one * 0.22f;
-            glowObject.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterial("Lantern Glow", new Color(1f, 0.80f, 0.36f));
+            Color glow = new Color(1f, 0.80f, 0.36f);
+            glowObject.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterialAdvanced("Lantern Glow", glow, 0.5f, 0f, glow * 0.85f);
+            glowObject.AddComponent<PulseEmissive>().Configure(1.8f, 0.6f, 0.08f);
             RemoveCollider(glowObject);
         }
     }

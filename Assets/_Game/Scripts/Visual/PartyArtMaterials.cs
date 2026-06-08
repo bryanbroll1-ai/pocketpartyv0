@@ -36,22 +36,28 @@ public static class PartyArtMaterials
 
     private static void ApplyCartoonSurface(Material material, PartyArtMaterialType type, Color color)
     {
-        ApplySmoothness(material, type == PartyArtMaterialType.Water ? 0.78f : 0.44f);
-        if (type == PartyArtMaterialType.Lava)
+        ApplySmoothness(material, type == PartyArtMaterialType.Water ? 0.82f : 0.30f);
+
+        if (type == PartyArtMaterialType.Metal)
         {
-            ApplyEmission(material, new Color(1f, 0.34f, 0.08f) * 0.45f);
+            if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", 0.85f);
+            ApplySmoothness(material, 0.62f);
+        }
+        else if (type == PartyArtMaterialType.Lava)
+        {
+            ApplyEmission(material, new Color(1f, 0.34f, 0.08f) * 0.9f);
         }
         else if (type == PartyArtMaterialType.Water)
         {
-            ApplyEmission(material, new Color(0.10f, 0.35f, 0.55f) * 0.18f);
+            ApplyEmission(material, new Color(0.10f, 0.40f, 0.60f) * 0.22f);
         }
         else if (type == PartyArtMaterialType.PlayerBlue || type == PartyArtMaterialType.PlayerRed || type == PartyArtMaterialType.PlayerGreen || type == PartyArtMaterialType.PlayerYellow)
         {
-            ApplyEmission(material, color * 0.12f);
+            ApplyEmission(material, color * 0.22f);
         }
         else if (type == PartyArtMaterialType.WhiteAccent || type == PartyArtMaterialType.Platform || type == PartyArtMaterialType.UIPanel)
         {
-            ApplyEmission(material, color * 0.05f);
+            ApplyEmission(material, color * 0.06f);
         }
     }
 

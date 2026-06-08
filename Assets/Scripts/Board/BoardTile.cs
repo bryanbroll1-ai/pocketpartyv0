@@ -56,7 +56,10 @@ public class BoardTile : MonoBehaviour
             beacon.transform.SetParent(transform, false);
             beacon.transform.localPosition = new Vector3(0f, 0.43f, 0f);
             beacon.transform.localScale = TileType == BoardTileType.Minigame ? new Vector3(0.20f, 0.08f, 0.20f) : new Vector3(0.14f, 0.22f, 0.14f);
-            beacon.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterial("Special Beacon", GetHighlightColor(TileType));
+            Color highlight = GetHighlightColor(TileType);
+            beacon.GetComponent<Renderer>().material = RuntimeVisuals.CreateMaterialAdvanced("Special Beacon", highlight, 0.6f, 0f, highlight * 0.7f);
+            beacon.AddComponent<PulseEmissive>().Configure(2.6f, 0.8f, 0.14f);
+            beacon.AddComponent<BobMotion>().Configure(0.04f, 1.9f, 0f);
             RemoveCollider(beacon);
         }
     }
